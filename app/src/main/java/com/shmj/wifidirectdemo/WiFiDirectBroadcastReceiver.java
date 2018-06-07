@@ -114,7 +114,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 //                Log.d(WiFiDirectActivity.TAG, "No devices found");
 //                return;
 //            }
-            mActivity.notifyDataSetChanged();
+            //mActivity.notifyDataSetChanged();
            // mActivity.msg.setText(  MainActivity.peers.toString());
         }
     };

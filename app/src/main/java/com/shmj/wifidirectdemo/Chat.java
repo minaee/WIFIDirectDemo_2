@@ -6,8 +6,10 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +17,7 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 /**
  * Created by Shahriar on 3/5/2018.
@@ -23,10 +26,8 @@ import java.net.UnknownHostException;
 public class Chat extends AppCompatActivity {
 
     TextView otherDevicename;
-    static TextView messages;
     Button sendBbutton;
     EditText textTosend;
-
 
     static String  msgToSend;
     Server server;
@@ -34,6 +35,10 @@ public class Chat extends AppCompatActivity {
     InetAddress mygroupOwnerAddress;
     boolean serverOrClient;
     WifiP2pInfo wifiP2pInfo;
+
+    public static ArrayList<String> msg_content = new ArrayList<>();
+    public static ListView messages;
+    public static ArrayAdapter msg_adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,7 +60,11 @@ public class Chat extends AppCompatActivity {
 
         sendBbutton = (Button) findViewById(R.id.sendButton);
         textTosend = (EditText) findViewById(R.id.textToSend);
-        messages = (TextView) findViewById(R.id.messages);
+        messages = (ListView) findViewById(R.id.messages);
+
+        msg_adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, msg_content );
+        msg_content.add("The chat goes Below...");
+        messages.setAdapter(msg_adapter);
 
         otherDevicename = (TextView) findViewById(R.id.otherDeviceName);
         otherDevicename.setText("this is a new chat");
@@ -123,13 +132,18 @@ public class Chat extends AppCompatActivity {
 
     static void updateMessagesfromServer(String msgs){
         if(msgs != null){
-            messages.setText(messages.getText() + "\n" + "client: " + msgs);
+            //messages.setText(messages.getText() + "\n" + "client: " + msgs);
+            msg_content.add( "Server: " + msgs);
+            msg_adapter.notifyDataSetChanged();
+
         }
     }
 
     public static void updateMessagesfromClient(String ret) {
         if(ret != null){
-            messages.setText(messages.getText() + "\n" + "Server: " + ret);
+            //messages.setText(messages.getText() + "\n" + "Server: " + ret);
+            msg_content.add("Client: " + ret);
+            msg_adapter.notifyDataSetChanged();
         }
     }
 }

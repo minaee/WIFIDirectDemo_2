@@ -80,7 +80,7 @@ public class Server extends Thread {
                 // Processing client data
                 System.out.println("Client sent over the content:" + clientInputStr);
 
-                Chat.updateMessagesfromServer(clientInputStr);
+                Chat.updateMessagesfromClient(clientInputStr);
 
                 //chat.messages.setText(messages.getText() + "\n" + "client: " + clientInputStr);
 
@@ -92,6 +92,7 @@ public class Server extends Thread {
                 msgToSend = Chat.getMsgToSend();
                 if( msgToSend != null) {
                     out.writeUTF(msgToSend);
+                    Chat.updateMessagesfromServer(msgToSend);
                 }
                 msgToSend = "";
 

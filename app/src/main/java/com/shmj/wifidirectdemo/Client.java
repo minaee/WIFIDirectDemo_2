@@ -55,11 +55,12 @@ public class Client extends Thread {
             DataInputStream input = new DataInputStream(socket.getInputStream());
 
             //Send data to the server
-            msgToSend = Chat.getMsgToSend();
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            System.out.print("please enter: \t");
+
+            msgToSend = Chat.getMsgToSend();
             if(msgToSend != null ) {
                 out.writeUTF(msgToSend);
+                Chat.updateMessagesfromClient(msgToSend);
             }
             msgToSend = null;
 //            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
@@ -71,14 +72,7 @@ public class Client extends Thread {
             String ret = input.readUTF();
             Log.i("server returns: " , ret);
             Log.i("in ane doros shod",Chat.msgToSend );
-
-            // 如接收到 "OK" 则断开连接
-            if ("OK".equals(ret)) {
-                System.out.println("Client will close the connection");
-                Thread.sleep(500);
-            }
-
-            Chat.updateMessagesfromClient(ret);
+            Chat.updateMessagesfromServer(ret);
             //messages.setText(messages.getText() + "\n" + "Server: " + ret);
 
             //out.close();

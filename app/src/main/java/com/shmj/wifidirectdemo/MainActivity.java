@@ -49,6 +49,10 @@ public class MainActivity extends AppCompatActivity  {
     public static ArrayList<WifiP2pDevice> peers = new ArrayList<>();
     private WifiP2pDeviceAdapter adapter;
 
+    private ArrayAdapter myAdapter;
+    ArrayList<String> deviceNames;
+
+
     public void showMsg (String message){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
@@ -64,8 +68,15 @@ public class MainActivity extends AppCompatActivity  {
 
         initFilter();
 
-        adapter = new WifiP2pDeviceAdapter(this,peers);
-        listView.setAdapter(adapter);
+        //adapter = new WifiP2pDeviceAdapter(this,peers);
+        //listView.setAdapter(adapter);
+        deviceNames = new ArrayList<>();
+        for(int i = 0 ; i < peers.size() ; i++){
+            deviceNames.add(peers.get(i).deviceName.toString());
+        }
+
+        myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, deviceNames );
+        listView.setAdapter(myAdapter);
 
         mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(this, getMainLooper(), null);
@@ -234,7 +245,10 @@ public class MainActivity extends AppCompatActivity  {
     public void search(View v) {
         onResume();
         Log.e("peers",peers.toString());
-
+        for(int i = 0 ; i < peers.size() ; i++){
+            deviceNames.add(peers.get(i).deviceName.toString());
+        }
+        myAdapter.notifyDataSetChanged();
 
 
         /*int pos = listView.getSelectedItemPosition();
