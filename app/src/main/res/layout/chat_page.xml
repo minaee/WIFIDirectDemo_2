@@ -60,7 +60,7 @@
             <ListView
                 android:id="@+id/decrypt_messages"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"   />
+                android:layout_height="match_parent"   />
         </LinearLayout>
 
         <LinearLayout
@@ -71,7 +71,7 @@
             <ListView
                 android:id="@+id/encrypt_messages"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"  />
+                android:layout_height="match_parent"  />
 
         </LinearLayout>
 

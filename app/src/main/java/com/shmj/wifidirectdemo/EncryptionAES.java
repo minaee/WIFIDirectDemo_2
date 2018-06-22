@@ -2,11 +2,15 @@ package com.shmj.wifidirectdemo;
 
 import android.util.Log;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -22,14 +26,16 @@ public class EncryptionAES {
 
     public EncryptionAES( ) throws NoSuchAlgorithmException {  }
 
-    public static byte[] encryptMSG(String secretKeyString, String msgContentString) {
+    public static byte[] encryptMSG(String secretKeyString, String msgContentString)
+            throws NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException,
+            NoSuchAlgorithmException, InvalidKeyException {
 
         try {
             byte[] returnArray;
             // generate AES secret key from user input
             Key key = generateKey(secretKeyString);
             // specify the cipher algorithm using AES
-            Cipher c = Cipher.getInstance("AES");
+            Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
             // specify the encryption mode
             c.init(Cipher.ENCRYPT_MODE, key);
             // encrypt
@@ -52,17 +58,23 @@ public class EncryptionAES {
 
     // decryption function
     public static byte[] decryptMSG(String secretKeyString, byte[] encryptedMsg)
-            throws Exception {
+            throws NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException,
+            NoSuchAlgorithmException, InvalidKeyException   {
         // generate AES secret key from the user input secret key
-        Key key = generateKey(secretKeyString);
+        Key key = null;
+        try {
+            key = generateKey(secretKeyString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // get the cipher algorithm for AES
-        Cipher c = Cipher.getInstance("AES");
+        Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
         // specify the decryption mode
         c.init(Cipher.DECRYPT_MODE, key);
 
-        byte[] msg = hex2byte(encryptedMsg);
+        //byte[] msg = hex2byte(encryptedMsg);
         // decrypt the message
-        byte[] decValue = c.doFinal(msg);
+        byte[] decValue = c.doFinal(encryptedMsg);
         return decValue;
     }
 
@@ -75,7 +87,7 @@ public class EncryptionAES {
         for (int n = 0; n < b.length; n += 2) {
             String item = new String(b, n, 2);
             if(item != null) {
-                Log.i("item: ",String.valueOf(n) + " " + String.valueOf(b));
+                Log.i("item: ",item + " " + String.valueOf(n) + " " + String.valueOf(b));
                 b2[n / 2] = (byte) Integer.parseInt(item, 16);
             }else {
 
