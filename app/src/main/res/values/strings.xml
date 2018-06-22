@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">WIFIDirect Demo</string>
     <string name="StartButton">Start</string>
+    <string name="send">send</string>
+    <string name="write_here">write here</string>
+    <string name="other_device_name">Other device name :</string>
+    <string name="encryption_algorithm">Encryption Algorithm:</string>
+    <string name="key">Key:</string>
 </resources>

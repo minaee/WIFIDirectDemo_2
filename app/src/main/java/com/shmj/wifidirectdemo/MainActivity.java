@@ -10,6 +10,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity  {
     private ArrayAdapter myAdapter;
     ArrayList<String> deviceNames;
 
+    String otherDeviceName = null;
 
     public void showMsg (String message){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity  {
                     case WifiP2pDevice.CONNECTED:
                     case WifiP2pDevice.INVITED:
                         connect(device);
+                        otherDeviceName = device.deviceName;
                         //openChat( wifiP2pInfo2 );
                         //openChat();
                         break;
@@ -233,6 +236,7 @@ public class MainActivity extends AppCompatActivity  {
         //serverOrClient = false;
         chatPage = new Intent(getApplicationContext(), Chat.class).putExtra("serverOrClient",serverOrClient);
         chatPage.putExtra("WifiP2pInfo",wifiP2pInfo);
+        chatPage.putExtra("otherDeviceName", otherDeviceName);
         startActivity(chatPage);
     }
 

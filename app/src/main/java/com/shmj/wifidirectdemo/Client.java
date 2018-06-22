@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
 
 import static com.shmj.wifidirectdemo.Chat.updateMessagesfromClient;
 import static com.shmj.wifidirectdemo.Chat.updateMessagesfromServer;
@@ -26,6 +27,10 @@ public class Client extends Thread {
     Socket socket;
     private boolean startReceive = false;
     private Chat chatActivity;
+    String secretKeyString = "1111111111111111";   //16 digit secret key
+    public EncryptionAES encryptionAES;
+    public byte[] decrypted_msg = null;
+
 
     public Client(InetAddress address, Chat chatActivity){
         this.address = address;
@@ -34,6 +39,11 @@ public class Client extends Thread {
     }
     @Override
     public void run() {
+        try {
+            encryptionAES = new EncryptionAES();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
         communication();
         try {
             socket = new Socket(address, Server.PORT);
@@ -82,9 +92,14 @@ public class Client extends Thread {
                         if (bytes == -1) {
                             break;
                         }
-                        String receivedMsg = new String(buffer, "UTF-8");
-                        Log.i("server returns: " , receivedMsg);
-                        updateMessagesfromServer(receivedMsg);
+
+                        if(buffer != null) {
+                            String encrypted_msg = new String(buffer, "UTF-8");
+                            decrypted_msg = encryptionAES.decryptMSG(secretKeyString, buffer);
+                            String decrypted_msg_string = new String(decrypted_msg, "UTF-8");
+                            Log.i("server returns: ", decrypted_msg_string);
+                            updateMessagesfromServer(encrypted_msg, decrypted_msg_string);
+                        }
                     }/*else{
                         Log.i("istream: ", "is null.");
                         iStream = socket.getInputStream();
@@ -144,10 +159,14 @@ public class Client extends Thread {
         try {
             Log.i("resid inja: ", "3");
             oStream.write(buffer);
-            String senddMsg = new String(buffer, "UTF-8");
-            updateMessagesfromClient(senddMsg);
+            String encrypted_msg = new String(buffer, "UTF-8");
+            byte[] decrypted_msg_byte = encryptionAES.decryptMSG(secretKeyString, buffer);
+            String encrypted_msg_string = new String(decrypted_msg_byte, "UTF-8");
+            updateMessagesfromClient(encrypted_msg, encrypted_msg_string);
         } catch (IOException e) {
             Log.e("Client", "Exception during write", e);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

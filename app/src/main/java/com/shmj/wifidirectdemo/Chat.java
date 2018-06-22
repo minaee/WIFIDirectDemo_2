@@ -17,7 +17,11 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+
+import java.security.Key;
+
 
 /**
  * Created by Shahriar on 3/5/2018.
@@ -25,7 +29,7 @@ import java.util.ArrayList;
 
 public class Chat extends AppCompatActivity {
 
-    TextView otherDevicename;
+    TextView otherDevicename, encyprionAlgo, key;
     Button sendButton;
     EditText textTosend;
 
@@ -35,18 +39,17 @@ public class Chat extends AppCompatActivity {
     InetAddress mygroupOwnerAddress;
     boolean serverOrClient;
     WifiP2pInfo wifiP2pInfo;
+    public EncryptionAES encryptionAES;
+    String secretKeyString = "1111111111111111";   //16 digit secret key
 
-    public static ArrayList<String> msg_content = new ArrayList<>();
-    public static ListView messages;
-    public static ArrayAdapter msg_adapter;
-
-    public static ArrayList<String> getMsg_content() {
-        return msg_content;
-    }
-
-    public static ArrayAdapter getMsg_adapter() {
-        return msg_adapter;
-    }
+    public static ArrayList<String> encrypted_msg_content = new ArrayList<>();
+    public static ArrayAdapter encrypted_msg_adapter;
+    public static ArrayList<String> decrypted_msg_content = new ArrayList<>();
+    public static ListView decrypted_messages;
+    public static ListView encrypted_messages;
+    public static ArrayAdapter decrypted_msg_adapter;
+    String otherDeviceName;
+    public byte[] encrypted_msg = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,32 +59,50 @@ public class Chat extends AppCompatActivity {
 
         //Log.i("wifiP2pinfo Chat", String.valueOf(wifiP2pInfo));
 
+        // receiving content from MainActivity
         serverOrClient = getIntent().getBooleanExtra("serverOrClient",true);
-
         wifiP2pInfo = getIntent().getExtras().getParcelable("WifiP2pInfo");
+        otherDeviceName  = getIntent().getExtras().getParcelable("otherDeviceName");
 
-
-        if(serverOrClient == false){
+        /*if(serverOrClient == false){
             Log.i("WPI chat client" , wifiP2pInfo.toString() );
         }else{
             Log.i("WPI chat server" , wifiP2pInfo.toString() );
-        }
+        }*/
 
+        // creating server o client instances
         if(wifiP2pInfo != null) {
             setSender(wifiP2pInfo, serverOrClient);
         }
 
+        // initializing Views
         sendButton = (Button) findViewById(R.id.sendButton);
         textTosend = (EditText) findViewById(R.id.textToSend);
-        messages = (ListView) findViewById(R.id.messages);
+        decrypted_messages = (ListView) findViewById(R.id.decrypt_messages);
+        encrypted_messages = (ListView) findViewById(R.id.encrypt_messages);
+        encyprionAlgo = (TextView) findViewById(R.id.otherDeviceName);
+        key = (TextView) findViewById(R.id.key);
 
-        msg_adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, msg_content );
-        msg_content.add("The chat goes Below...");
-        messages.setAdapter(msg_adapter);
+        //setting adapter for listview(chat messages)
+        decrypted_msg_adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, decrypted_msg_content );
+        decrypted_msg_content.add("decrypted messages:");
+        decrypted_messages.setAdapter(decrypted_msg_adapter);
+        encrypted_msg_adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, encrypted_msg_content);
+        encrypted_msg_content.add("encrypted messages:");
+        encrypted_messages.setAdapter(encrypted_msg_adapter);
 
+        // name of chat partner
         otherDevicename = (TextView) findViewById(R.id.otherDeviceName);
-        otherDevicename.setText("this is a new chat");
+        otherDevicename.setText("this is a new chat with: " + otherDeviceName);
+        encyprionAlgo.setText( encyprionAlgo.getText().toString() + "AES");
+        key.setText(key.getText().toString() + secretKeyString);
         msgToSend = "thisShitIsNull";
+
+        try {
+            encryptionAES = new EncryptionAES();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     public void showMsg(String message){
@@ -98,27 +119,39 @@ public class Chat extends AppCompatActivity {
             msgToSend = String.valueOf(textTosend2.getText());
             //showMsg(msgToSend+" from Fucking Send.");
 
-            if(serverOrClient == true){ // for server
+            //encrypt msg before sending
+
+            try {
+                encrypted_msg = encryptionAES.encryptMSG(secretKeyString, msgToSend);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if(serverOrClient == true && encrypted_msg != null){ // for server
                 /*updateMessagesfromServer("");
                 server = new Server(  wifiP2pInfo.groupOwnerAddress );
                 server.start();*/
 
-                server.write(msgToSend.getBytes());
+                //server.write(msgToSend.getBytes());
+                server.write(encrypted_msg);
                 //msg_content.add("server: " + msgToSend.toString());
                 //msg_adapter.notifyDataSetChanged();
                 Log.i("msg to send server: ",msgToSend);
                 //server.sendFromServer(String.valueOf(textTosend));
                 //server.sendFromServer(String.valueOf(msgToSend));
-            }else{    // for client
+            }else if(serverOrClient == false && encrypted_msg != null){    // for client
                 /*updateMessagesfromClient("");
                 client = new Client(  wifiP2pInfo.groupOwnerAddress );
                 client.start();*/
-                client.write(msgToSend.getBytes());
+                client.write(encrypted_msg);
                 //msg_content.add("client: " + msgToSend.toString());
                 //msg_adapter.notifyDataSetChanged();
                 Log.i("msg to send client: ",msgToSend);
 //            client.sendFromClient(String.valueOf(textTosend));
                 //client.sendFromClient(String.valueOf(msgToSend));
+            } else {
+                Log.i("encrypted message: ", "is null.");
+                showMsg("encrypted message is null.");
             }
 
 
@@ -162,20 +195,24 @@ public class Chat extends AppCompatActivity {
         }
     }
 
-    static void updateMessagesfromServer(String msgs){
-        if(msgs != null){
+    static void updateMessagesfromServer(String encrypted_msg, String decrypted_msg){
+        if(encrypted_msg != null && decrypted_msg != null){
             //messages.setText(messages.getText() + "\n" + "client: " + msgs);
-            msg_content.add( "Server: " + msgs);
-            msg_adapter.notifyDataSetChanged();
+            decrypted_msg_content.add( "Server: " + decrypted_msg);
+            decrypted_msg_adapter.notifyDataSetChanged();
+            encrypted_msg_content.add( "Server: " + encrypted_msg);
+            encrypted_msg_adapter.notifyDataSetChanged();
 
         }
     }
 
-    public static void updateMessagesfromClient(String ret) {
-        if(ret != null){
+    public static void updateMessagesfromClient(String encrypted_msg, String decrypted_msg) {
+        if(encrypted_msg != null && decrypted_msg != null){
             //messages.setText(messages.getText() + "\n" + "Server: " + ret);
-            msg_content.add("Client: " + ret);
-            msg_adapter.notifyDataSetChanged();
+            decrypted_msg_content.add("Client: " + decrypted_msg);
+            decrypted_msg_adapter.notifyDataSetChanged();
+            encrypted_msg_content.add( "Client: " + encrypted_msg);
+            encrypted_msg_adapter.notifyDataSetChanged();
         }
     }
 }
