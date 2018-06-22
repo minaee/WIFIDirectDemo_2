@@ -5,9 +5,13 @@ import android.util.Log;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import static com.shmj.wifidirectdemo.Chat.updateMessagesfromClient;
+import static com.shmj.wifidirectdemo.Chat.updateMessagesfromServer;
 import static com.shmj.wifidirectdemo.Server.PORT;
 
 /**
@@ -17,72 +21,113 @@ import static com.shmj.wifidirectdemo.Server.PORT;
 public class Client extends Thread {
     InetAddress address;
     String msgToSend;
+    private InputStream iStream;
+    private OutputStream oStream;
+    Socket socket;
+    private boolean startReceive = false;
+    private Chat chatActivity;
 
-    public Client(InetAddress address){
+    public Client(InetAddress address, Chat chatActivity){
         this.address = address;
+        this.chatActivity = chatActivity;
+
     }
     @Override
     public void run() {
         communication();
-    }
-
-    /*public void sendFromClient(String str){
         try {
-            //ServerSocket serverSocket = new ServerSocket(PORT,5,address);
-            Socket socket;
-            socket = new Socket(address, PORT);
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-            out.writeUTF(str);
-            out.close();
-
-        }catch (Exception e){
-            System.out.println("Client run abnormal: " + e.getMessage());
+            socket = new Socket(address, Server.PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("Error: ", e.getMessage().toString());
         }
-    }*/
+    }
 
     private void communication(){
         Socket socket = null;
+
+
         try {
+            socket = new Socket(address, PORT);
+            iStream = socket.getInputStream();
+            oStream = socket.getOutputStream();
+            if(iStream != null && oStream != null){
+                Log.i("Client i&o stream: ", "not null");
+            }else {
+                Log.i("Client i&o stream: ", "null");
+            }
             //Create a stream socket and connect it to the
             //specified port number on the specified host
             //socket = new Socket(address, PORT);
-            socket = new Socket(address, Server.PORT);
 
+            //socket = new Socket(address, Server.PORT);
 
             //Read server data
-            DataInputStream input = new DataInputStream(socket.getInputStream());
+            //DataInputStream input = new DataInputStream(socket.getInputStream());
 
             //Send data to the server
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            //DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
+            //iStream = socket.getInputStream();
+            //oStream = socket.getOutputStream();
+            byte[] buffer = new byte[1024];
+            int bytes;
+            Log.i("resid inja: ", "1");
+
+            while( !startReceive ){
+                try{
+                    if(iStream!=null) {
+                        Log.i("resid inja: ", "2");
+                        bytes = iStream.read(buffer);
+                        if (bytes == -1) {
+                            break;
+                        }
+                        String receivedMsg = new String(buffer, "UTF-8");
+                        Log.i("server returns: " , receivedMsg);
+                        updateMessagesfromServer(receivedMsg);
+                    }/*else{
+                        Log.i("istream: ", "is null.");
+                        iStream = socket.getInputStream();
+                    }*/
+                        //Log.e("error: ", iStream.toString());
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                    Log.e("error: ", e.getMessage());
+                }
+            }
+
+            /*
             msgToSend = Chat.getMsgToSend();
             if(msgToSend != null ) {
                 out.writeUTF(msgToSend);
                 Chat.updateMessagesfromClient(msgToSend);
             }
             msgToSend = null;
+            */
 //            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
 //            out.writeUTF(str);
             //out.writeUTF("test");
 
 
 
+            /*
             String ret = input.readUTF();
             Log.i("server returns: " , ret);
             Log.i("in ane doros shod",Chat.msgToSend );
             Chat.updateMessagesfromServer(ret);
+            */
             //messages.setText(messages.getText() + "\n" + "Server: " + ret);
 
             //out.close();
-            input.close();
+            //input.close();
         } catch (Exception e) {
             System.out.println("Client exception:" + e.getMessage());
         } finally {
             if (socket != null) {
                 try {
-                    socket.close();
+                    iStream.close();
+                    //socket.close();
                 } catch (IOException e) {
                     socket = null;
                     System.out.println("Clients finally abnormal:" + e.getMessage());
@@ -90,4 +135,20 @@ public class Client extends Thread {
             }
         }
     }
+
+    /**
+     * Method to write a byte array (that can be a message) on the output stream.
+     * @param buffer byte[] array that represents data to write. For example, a String converted in byte[] with ".getBytes();"
+     */
+    public void write(byte[] buffer) {
+        try {
+            Log.i("resid inja: ", "3");
+            oStream.write(buffer);
+            String senddMsg = new String(buffer, "UTF-8");
+            updateMessagesfromClient(senddMsg);
+        } catch (IOException e) {
+            Log.e("Client", "Exception during write", e);
+        }
+    }
+
 }

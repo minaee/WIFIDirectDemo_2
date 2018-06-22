@@ -78,6 +78,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
             if (networkInfo.isConnected()) {
                 mManager.requestConnectionInfo(mChannel, connectionInfoListener);
+
             } else {
                 mActivity.showMsg("no peer is connected!");
             }
@@ -120,10 +121,14 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     };
 
     private WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
+
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             Log.i("ConnectionInfoListener",wifiP2pInfo.toString());
             // InetAddress from WifiP2pInfo struct.
+
+
+
 
 
             mActivity.showMsg("connection established!");

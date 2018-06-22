@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity  {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                int position = i; //Integer.parseInt(v.getTag().toString());
+                int position = i;//Integer.parseInt(view.getTag().toString());
                 WifiP2pDevice device = peers.get(position);
                 switch (device.status){
                     case WifiP2pDevice.AVAILABLE:
@@ -177,13 +177,13 @@ public class MainActivity extends AppCompatActivity  {
         });
     }
 
-    public void notifyDataSetChanged(){
+    /*public void notifyDataSetChanged(){
         adapter.notifyDataSetChanged();
         if (peers.size() == 0) {
             Log.d("notifyDataSetChanged", "No devices found");
             showMsg("No devices found");
         }
-    }
+    }*/
 
     public void connect(final WifiP2pDevice device) {
         // Picking the selected device found on the network.
@@ -236,12 +236,6 @@ public class MainActivity extends AppCompatActivity  {
         startActivity(chatPage);
     }
 
-    public void openChat(){
-        serverOrClient = true;
-        chatPage = new Intent(getApplicationContext(), Chat.class).putExtra("serverOrClient", serverOrClient);
-        startActivity(chatPage);
-    }
-
     public void search(View v) {
         onResume();
         Log.e("peers",peers.toString());
@@ -249,22 +243,6 @@ public class MainActivity extends AppCompatActivity  {
             deviceNames.add(peers.get(i).deviceName.toString());
         }
         myAdapter.notifyDataSetChanged();
-
-
-        /*int pos = listView.getSelectedItemPosition();
-        //connect(peers.get(pos));
-        switch (v.getId()){
-            case R.id.listitem:
-                connect(peers.get(pos));
-                //startRegistration();
-                break;
-            case R.id.startButton:
-                onResume();
-                Log.e("peers",peers.toString());
-
-                //discoverService();
-              //  break;
-        }*/
     }
 
 }

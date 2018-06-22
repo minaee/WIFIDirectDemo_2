@@ -26,12 +26,12 @@ import java.util.ArrayList;
 public class Chat extends AppCompatActivity {
 
     TextView otherDevicename;
-    Button sendBbutton;
+    Button sendButton;
     EditText textTosend;
 
     static String  msgToSend;
-    Server server;
-    Client client;
+    private Server server;
+    private Client client;
     InetAddress mygroupOwnerAddress;
     boolean serverOrClient;
     WifiP2pInfo wifiP2pInfo;
@@ -39,6 +39,14 @@ public class Chat extends AppCompatActivity {
     public static ArrayList<String> msg_content = new ArrayList<>();
     public static ListView messages;
     public static ArrayAdapter msg_adapter;
+
+    public static ArrayList<String> getMsg_content() {
+        return msg_content;
+    }
+
+    public static ArrayAdapter getMsg_adapter() {
+        return msg_adapter;
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,14 +59,19 @@ public class Chat extends AppCompatActivity {
         serverOrClient = getIntent().getBooleanExtra("serverOrClient",true);
 
         wifiP2pInfo = getIntent().getExtras().getParcelable("WifiP2pInfo");
-        Log.i("WPI chat" , wifiP2pInfo.toString() );
 
+
+        if(serverOrClient == false){
+            Log.i("WPI chat client" , wifiP2pInfo.toString() );
+        }else{
+            Log.i("WPI chat server" , wifiP2pInfo.toString() );
+        }
 
         if(wifiP2pInfo != null) {
             setSender(wifiP2pInfo, serverOrClient);
         }
 
-        sendBbutton = (Button) findViewById(R.id.sendButton);
+        sendButton = (Button) findViewById(R.id.sendButton);
         textTosend = (EditText) findViewById(R.id.textToSend);
         messages = (ListView) findViewById(R.id.messages);
 
@@ -71,7 +84,9 @@ public class Chat extends AppCompatActivity {
         msgToSend = "thisShitIsNull";
     }
 
-    public void showMsg(String message){ Toast.makeText(this, message, Toast.LENGTH_LONG).show(); }
+    public void showMsg(String message){
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
 
     public static String getMsgToSend() {
         return msgToSend;
@@ -81,22 +96,27 @@ public class Chat extends AppCompatActivity {
        EditText textTosend2 = (EditText) findViewById(R.id.textToSend);
         if(String.valueOf(textTosend2.getText()) != null){
             msgToSend = String.valueOf(textTosend2.getText());
-            showMsg(msgToSend+" from Fucking Send.");
+            //showMsg(msgToSend+" from Fucking Send.");
 
             if(serverOrClient == true){ // for server
-                updateMessagesfromServer("");
-                    //server = new Server(  InetAddress.getByName("192.168.49.1") );
+                /*updateMessagesfromServer("");
                 server = new Server(  wifiP2pInfo.groupOwnerAddress );
-                server.start();
+                server.start();*/
 
+                server.write(msgToSend.getBytes());
+                //msg_content.add("server: " + msgToSend.toString());
+                //msg_adapter.notifyDataSetChanged();
+                Log.i("msg to send server: ",msgToSend);
                 //server.sendFromServer(String.valueOf(textTosend));
                 //server.sendFromServer(String.valueOf(msgToSend));
             }else{    // for client
-                updateMessagesfromClient("");
+                /*updateMessagesfromClient("");
                 client = new Client(  wifiP2pInfo.groupOwnerAddress );
-                client.start();
-                    //client = new Client( InetAddress.getByName("192.168.49.1") );
-
+                client.start();*/
+                client.write(msgToSend.getBytes());
+                //msg_content.add("client: " + msgToSend.toString());
+                //msg_adapter.notifyDataSetChanged();
+                Log.i("msg to send client: ",msgToSend);
 //            client.sendFromClient(String.valueOf(textTosend));
                 //client.sendFromClient(String.valueOf(msgToSend));
             }
@@ -104,7 +124,7 @@ public class Chat extends AppCompatActivity {
 
         }
 
-        Log.i("msg to send:",msgToSend);
+
    }
 
     private void setSender(WifiP2pInfo wifiP2pInfo, boolean serverOrClient) {
@@ -114,18 +134,30 @@ public class Chat extends AppCompatActivity {
             // Do whatever tasks are specific to the group owner.
             // One common case is creating a server thread and accepting
             // incoming connections.
-            server = new Server(mygroupOwnerAddress);
-            server.start();
-            showMsg("server created.");
+            Log.i("server Sender: ", "criteria met.");
+            server = new Server(mygroupOwnerAddress,this);
+            //server.start();
+            showMsg("server created from server.");
+            //client = new Client(mygroupOwnerAddress, this);
+            //client.start();
+            //showMsg("client created from server");
 //                chat.sendAsServer(groupOwnerAddress);
+            server.start();
+            Log.i("server setSender: ", server.toString());
 
         } else if (wifiP2pInfo.groupFormed && serverOrClient == false) {
             // The other device acts as the client. In this case,
             // you'll want to create a client thread that connects to the group
             // owner.
-            client = new Client(mygroupOwnerAddress);
+            Log.i("client Sender: ", "criteria met.");
+            client = new Client(mygroupOwnerAddress, this);
+            //client.start();
+            showMsg("client created from client");
             client.start();
-            showMsg("client created");
+            Log.i("client setSender: ", client.toString());
+            //server = new Server(mygroupOwnerAddress, this);
+            //server.start();
+            //showMsg("server created from client");
             //chat.sendAsClient(groupOwnerAddress);
         }
     }
