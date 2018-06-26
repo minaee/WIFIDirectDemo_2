@@ -49,7 +49,7 @@ public class Chat extends AppCompatActivity {
     public static ListView encrypted_messages;
     public static ArrayAdapter decrypted_msg_adapter;
     String otherDeviceName;
-    public byte[] encrypted_msg = null;
+    public String  encrypted_msg = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -99,7 +99,7 @@ public class Chat extends AppCompatActivity {
         msgToSend = "thisShitIsNull";
 
         try {
-            encryptionAES = new EncryptionAES();
+            encryptionAES = new EncryptionAES(secretKeyString.getBytes());
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -122,7 +122,8 @@ public class Chat extends AppCompatActivity {
             //encrypt msg before sending
 
             try {
-                encrypted_msg = encryptionAES.encryptMSG(secretKeyString, msgToSend);
+                //encrypted_msg = encryptionAES.encryptMSG(secretKeyString, msgToSend);
+                encrypted_msg = encryptionAES.encrypt(msgToSend);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -133,7 +134,7 @@ public class Chat extends AppCompatActivity {
                 server.start();*/
 
                 //server.write(msgToSend.getBytes());
-                server.write(encrypted_msg);
+                server.write(encrypted_msg.getBytes());
                 //msg_content.add("server: " + msgToSend.toString());
                 //msg_adapter.notifyDataSetChanged();
                 Log.i("msg to send server: ",msgToSend);
@@ -143,7 +144,7 @@ public class Chat extends AppCompatActivity {
                 /*updateMessagesfromClient("");
                 client = new Client(  wifiP2pInfo.groupOwnerAddress );
                 client.start();*/
-                client.write(encrypted_msg);
+                client.write(encrypted_msg.getBytes());
                 //msg_content.add("client: " + msgToSend.toString());
                 //msg_adapter.notifyDataSetChanged();
                 Log.i("msg to send client: ",msgToSend);

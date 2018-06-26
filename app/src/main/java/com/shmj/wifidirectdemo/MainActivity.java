@@ -242,6 +242,7 @@ public class MainActivity extends AppCompatActivity  {
 
     public void search(View v) {
         onResume();
+        deviceNames.clear();
         Log.e("peers",peers.toString());
         for(int i = 0 ; i < peers.size() ; i++){
             deviceNames.add(peers.get(i).deviceName.toString());

@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 import static com.shmj.wifidirectdemo.Chat.updateMessagesfromClient;
 import static com.shmj.wifidirectdemo.Chat.updateMessagesfromServer;
@@ -29,7 +30,7 @@ public class Client extends Thread {
     private Chat chatActivity;
     String secretKeyString = "1111111111111111";   //16 digit secret key
     public EncryptionAES encryptionAES;
-    public byte[] decrypted_msg = null;
+    String decrypted_msg = null;
 
 
     public Client(InetAddress address, Chat chatActivity){
@@ -40,7 +41,7 @@ public class Client extends Thread {
     @Override
     public void run() {
         try {
-            encryptionAES = new EncryptionAES();
+            encryptionAES = new EncryptionAES(secretKeyString.getBytes());
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -84,21 +85,34 @@ public class Client extends Thread {
             int bytes;
             Log.i("resid inja: ", "1");
 
+            ArrayList<Byte> mBuffer = new ArrayList<>();
+
             while( !startReceive ){
                 try{
                     if(iStream!=null) {
                         Log.i("resid inja: ", "2");
                         bytes = iStream.read(buffer);
+                        Log.i("number of bytes: ", String.valueOf(bytes));
                         if (bytes == -1) {
                             break;
                         }
+                        byte[] buffer2 = new byte[bytes];
+                        for(int i=0 ; i < bytes ; i++){
+                            //mBuffer.set(i, buffer[i]);
+                            buffer2[i] = buffer[i];
+                        }
 
                         if(buffer != null) {
-                            String encrypted_msg = new String(buffer, "UTF-8");
-                            decrypted_msg = encryptionAES.decryptMSG(secretKeyString, buffer);
-                            String decrypted_msg_string = new String(decrypted_msg, "UTF-8");
-                            Log.i("server returns: ", decrypted_msg_string);
-                            updateMessagesfromServer(encrypted_msg, decrypted_msg_string);
+                            Log.i("buffer: ", new String(buffer, "UTF-8"));
+                            String encrypted_msg = new String(buffer2, "UTF-8");
+
+                            Log.i("before decrypt Client: ", encrypted_msg);
+                            //decrypted_msg = encryptionAES.decryptMSG(secretKeyString, buffer);
+                            decrypted_msg = encryptionAES.decrypt( encrypted_msg);
+                            //String decrypted_msg_string = new String(decrypted_msg, "UTF-8");
+                            Log.i("server returns: ", decrypted_msg);
+                            chatActivity.updateMessagesfromServer(encrypted_msg, decrypted_msg);
+                            decrypted_msg = null;
                         }
                     }/*else{
                         Log.i("istream: ", "is null.");
@@ -160,9 +174,10 @@ public class Client extends Thread {
             Log.i("resid inja: ", "3");
             oStream.write(buffer);
             String encrypted_msg = new String(buffer, "UTF-8");
-            byte[] decrypted_msg_byte = encryptionAES.decryptMSG(secretKeyString, buffer);
-            String encrypted_msg_string = new String(decrypted_msg_byte, "UTF-8");
-            updateMessagesfromClient(encrypted_msg, encrypted_msg_string);
+            //byte[] decrypted_msg_byte = encryptionAES.decrypt(encrypted_msg);
+            String decrypted_msg_string = encryptionAES.decrypt(encrypted_msg);
+            //String encrypted_msg_string = new String(decrypted_msg_byte, "UTF-8");
+            updateMessagesfromClient(encrypted_msg, decrypted_msg_string);
         } catch (IOException e) {
             Log.e("Client", "Exception during write", e);
         } catch (Exception e) {
